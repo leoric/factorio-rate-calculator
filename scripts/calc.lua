@@ -227,7 +227,7 @@ local function on_player_alt_reverse_selected_area(e)
   gui.build_and_show(player, set)
 end
 
---- @class Calc
+--- @class Calc: event_handler
 local calc = {}
 
 calc.events = {
