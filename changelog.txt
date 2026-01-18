@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.3.8
 Date: ????
+  Graphics:
+    - Updated shortcut icon by Galdoc.
   Bugfixes:
     - Fixed that fluid fuel consumption for crafting machines was using the wrong fluid. (#209)
 ---------------------------------------------------------------------------------------------------
