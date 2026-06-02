@@ -455,6 +455,7 @@ function calc_util.process_lab(set, entity, invert)
   local research_multiplier = research_data.multiplier
   local researching_speed = entity.prototype.get_researching_speed(entity.quality)
   local speed_modifier = research_data.speed_modifier
+  -- TODO: Lab rates are wrong somehow. :(
   -- XXX: Due to a bug with entity_speed_bonus, we must subtract the force's lab speed bonus and convert it to a
   -- multiplicative relationship
   local lab_multiplier = research_multiplier
@@ -462,7 +463,7 @@ function calc_util.process_lab(set, entity, invert)
     * researching_speed
     * science_pack_drain
 
-  local inputs = flib_table.invert(entity.prototype.lab_inputs)
+  local inputs = flib_table.inverted(entity.prototype.lab_inputs)
   for _, ingredient in pairs(research_data.ingredients) do
     if not inputs[ingredient.name] then
       calc_util.add_error(set, "incompatible-science-packs")
@@ -472,7 +473,8 @@ function calc_util.process_lab(set, entity, invert)
 
   for _, ingredient in ipairs(research_data.ingredients) do
     -- TODO: Select quality
-    local amount = (ingredient.amount * lab_multiplier) / prototypes.item[ingredient.name].get_durability()
+    local durability = prototypes.item[ingredient.name].get_durability() or 1
+    local amount = ingredient.amount * lab_multiplier / durability
     calc_util.add_rate(set, "input", "item", ingredient.name, "normal", amount, invert, entity.name)
   end
 end
@@ -611,13 +613,8 @@ function calc_util.process_offshore_pump(set, entity, invert)
   if not fluid then
     return
   end
-  local pumping_speed = 0
-  if flib_migration.is_newer_version("2.0.32", script.active_mods.base) then -- 2.0.33 or higher
-    pumping_speed = entity.prototype.get_pumping_speed(entity.quality)
-  else
-    pumping_speed = entity.prototype.pumping_speed
-  end
 
+  local pumping_speed = entity.prototype.get_pumping_speed(entity.quality)
   calc_util.add_rate(set, "output", "fluid", fluid.name, "normal", pumping_speed * 60, invert, entity.name)
 end
 

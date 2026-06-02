@@ -17,6 +17,7 @@ local flib_math = require("__flib__.math")
 --- @class GuiUtil
 local gui_util = {}
 
+-- TODO: Move these to root scope
 function gui_util.build_divisor_filters()
   --- @type EntityPrototypeFilter[]
   local materials = {}
@@ -57,14 +58,11 @@ function gui_util.build_divisor_filters()
   }
 end
 
-function gui_util.build_dictionaries()
-  flib_dictionary.new("search")
-  for name, prototype in pairs(prototypes.fluid) do
-    flib_dictionary.add("search", "fluid/" .. name, prototype.localised_name)
-  end
-  for name, prototype in pairs(prototypes.item) do
-    flib_dictionary.add("search", "item/" .. name, prototype.localised_name)
-  end
+for name, prototype in pairs(prototypes.fluid) do
+  flib_dictionary.add("search", "fluid/" .. name, prototype.localised_name)
+end
+for name, prototype in pairs(prototypes.item) do
+  flib_dictionary.add("search", "item/" .. name, prototype.localised_name)
 end
 
 --- @param inserter LuaEntityPrototype

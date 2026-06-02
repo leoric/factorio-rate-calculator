@@ -405,7 +405,7 @@ function gui_rates.update_display_data(self, set)
   local manual_multiplier = self.manual_multiplier
   local multiplier = timescale_data.multiplier or 1
   local divisor, type_filter, divide_stacks, inserter_stack_size = gui_util.get_divisor(self)
-  local dictionary = flib_dictionary.get(self.player.index, "search") or {}
+  local dictionary = flib_dictionary.get(self.player, "search") or {}
   local show_power_input = self.player.mod_settings["rcalc-show-power-consumption"].value --[[@as boolean]]
   local show_pollution = self.player.mod_settings["rcalc-show-pollution"].value --[[@as boolean]]
   local search_query = self.search_query
@@ -417,7 +417,7 @@ function gui_rates.update_display_data(self, set)
     local multiplier = is_watts and 1 or multiplier
     local divisor = is_watts and 1 or divisor
     return {
-      machine_counts = flib_table.map(rate.machine_counts, function(count)
+      machine_counts = flib_table.mapped(rate.machine_counts, function(count)
         return count * manual_multiplier
       end),
       machines = rate.machines * manual_multiplier,

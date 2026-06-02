@@ -1,0 +1,23 @@
+{
+	"diagnostics": {
+		"disable": [
+			"unnecessary-if"
+		],
+		"globals": [
+			"__DebugAdapter",
+			"__Profiler"
+		]
+	},
+	"runtime": {
+		"version": "Lua5.2"
+	},
+	"workspace": {
+		"ignoreDir": [
+			"scripts/legacy"
+		],
+		"library": [
+			"{env:FACTORIO_LIBRARY_ROOT}",
+			"./vendor"
+		]
+	}
+}
