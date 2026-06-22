@@ -534,10 +534,12 @@ function gui.on_init()
   storage.gui = {}
 
   gui_util.build_divisor_filters()
+  gui_util.build_dictionaries()
 end
 
 function gui.on_configuration_changed()
   gui_util.build_divisor_filters()
+  gui_util.build_dictionaries()
 
   for _, player in pairs(game.players) do
     destroy_gui(player)

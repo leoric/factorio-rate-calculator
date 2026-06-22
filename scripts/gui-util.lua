@@ -58,11 +58,14 @@ function gui_util.build_divisor_filters()
   }
 end
 
-for name, prototype in pairs(prototypes.fluid) do
-  flib_dictionary.add("search", "fluid/" .. name, prototype.localised_name)
-end
-for name, prototype in pairs(prototypes.item) do
-  flib_dictionary.add("search", "item/" .. name, prototype.localised_name)
+function gui_util.build_dictionaries()
+  flib_dictionary.new("search")
+  for name, prototype in pairs(prototypes.fluid) do
+    flib_dictionary.add("search", "fluid/" .. name, prototype.localised_name)
+  end
+  for name, prototype in pairs(prototypes.item) do
+    flib_dictionary.add("search", "item/" .. name, prototype.localised_name)
+  end
 end
 
 --- @param inserter LuaEntityPrototype
