@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.4.0
-Date: ????
+Date: 2026-06-23
   Info:
     - Lab rates are incorrect. This will be fixed in a future update.
   Changes:
