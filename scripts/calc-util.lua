@@ -145,14 +145,17 @@ function calc_util.process_burner(set, entity, invert, emissions_per_second)
   return emissions_per_second + emissions
 end
 
---- @param fluidbox LuaFluidBox
+--- @param entity LuaEntity
 --- @param index uint
 --- @return LuaFluidPrototype?
-local function get_fluid(fluidbox, index)
-  local fluid = fluidbox.get_filter(index)
-  if not fluid then
-    fluid = fluidbox[index] --[[@as FluidBoxFilter?]]
+local function get_fluid(entity, index)
+  local filter = entity.has_fluid_segment(index) and entity.get_fluid_segment_filter(index)
+    or entity.get_fluid_filter(index)
+  if filter and filter.fluid then
+    return filter.fluid --[[@as LuaFluidPrototype]]
   end
+
+  local fluid = entity.get_fluid(index)
   if fluid then
     return prototypes.fluid[fluid.name]
   end
@@ -171,18 +174,19 @@ end
 --- @param invert boolean
 function calc_util.process_boiler(set, entity, invert)
   local entity_prototype = entity.prototype
-  local fluidbox = entity.fluidbox
 
-  local input_fluid = get_fluid(fluidbox, 1)
+  local input_fluid = get_fluid(entity, 1)
   if not input_fluid then
     calc_util.add_error(set, "no-input-fluid")
     return
   end
 
-  local minimum_temperature = fluidbox.get_prototype(1).minimum_temperature or input_fluid.default_temperature
-  local energy_per_amount = (entity_prototype.target_temperature - minimum_temperature) * input_fluid.heat_capacity
-  local fluid_usage = entity_prototype.get_max_energy_usage(entity.quality) / energy_per_amount * 60
-  calc_util.add_rate(set, "input", "fluid", input_fluid.name, "normal", fluid_usage, invert, entity.name)
+  do
+    local minimum_temperature = entity.get_fluid_box_prototype(1).minimum_temperature or input_fluid.default_temperature
+    local energy_per_amount = (entity_prototype.target_temperature - minimum_temperature) * input_fluid.heat_capacity
+    local fluid_usage = entity_prototype.get_max_energy_usage(entity.quality) / energy_per_amount * 60
+    calc_util.add_rate(set, "input", "fluid", input_fluid.name, "normal", fluid_usage, invert, entity.name)
+  end
 
   if entity_prototype.boiler_mode == "heat-water-inside" then
     calc_util.add_rate(
@@ -199,12 +203,12 @@ function calc_util.process_boiler(set, entity, invert)
     return
   end
 
-  local output_fluid = get_fluid(fluidbox, 2)
+  local output_fluid = get_fluid(entity, 2)
   if not output_fluid then
     return
   end
 
-  local minimum_temperature = fluidbox.get_prototype(2).minimum_temperature or output_fluid.default_temperature
+  local minimum_temperature = entity.get_fluid_box_prototype(2).minimum_temperature or output_fluid.default_temperature
   local energy_per_amount = (entity_prototype.target_temperature - minimum_temperature) * output_fluid.heat_capacity
   local fluid_usage = entity_prototype.get_max_energy_usage(entity.quality) / energy_per_amount * 60
   calc_util.add_rate(set, "output", "fluid", output_fluid.name, "normal", fluid_usage, invert, entity.name)
@@ -356,13 +360,12 @@ function calc_util.process_fluid_energy_source(set, entity, invert, emissions_pe
   local entity_prototype = entity.prototype
   local fluid_energy_source_prototype = entity_prototype.fluid_energy_source_prototype --[[@as LuaFluidEnergySourcePrototype]]
 
-  local fluidbox = entity.fluidbox
   -- The fluid energy source fluidbox will always be the first one
   local fluid_prototype
   if entity.type == "boiler" then
-    fluid_prototype = get_fluid(fluidbox, #fluidbox)
+    fluid_prototype = get_fluid(entity, entity.fluids_count)
   else
-    fluid_prototype = get_fluid(fluidbox, 1)
+    fluid_prototype = get_fluid(entity, 1)
   end
   if not fluid_prototype then
     calc_util.add_error(set, "no-input-fluid")
@@ -376,7 +379,7 @@ function calc_util.process_fluid_energy_source(set, entity, invert, emissions_pe
       value = max_energy_usage / (fluid_prototype.fuel_value / 60) / fluid_energy_source_prototype.effectivity
     else
       -- Now we need the actual fluid to get its temperature
-      local fluid = fluidbox[#fluidbox]
+      local fluid = entity.get_fluid(entity.fluids_count)
       if not fluid then
         calc_util.add_error(set, "no-input-fluid")
         return emissions_per_second
@@ -407,7 +410,7 @@ end
 --- @param invert boolean
 function calc_util.process_generator(set, entity, invert)
   local entity_prototype = entity.prototype
-  local fluid = get_fluid(entity.fluidbox, 1)
+  local fluid = get_fluid(entity, 1)
   if not fluid then
     calc_util.add_error(set, "no-input-fluid")
     return
@@ -608,7 +611,7 @@ end
 --- @param entity LuaEntity
 --- @param invert boolean
 function calc_util.process_offshore_pump(set, entity, invert)
-  local fluid = entity.fluidbox[1]
+  local fluid = entity.get_fluid(1)
   if not fluid then
     return
   end
