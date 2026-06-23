@@ -405,7 +405,7 @@ function gui_rates.update_display_data(self, set)
   local manual_multiplier = self.manual_multiplier
   local multiplier = timescale_data.multiplier or 1
   local divisor, type_filter, divide_stacks, inserter_stack_size = gui_util.get_divisor(self)
-  local dictionary = flib_dictionary.get(self.player, "search") or {}
+  local dictionary = flib_dictionary.get(self.player.index, "search") or {}
   local show_power_input = self.player.mod_settings["rcalc-show-power-consumption"].value --[[@as boolean]]
   local show_pollution = self.player.mod_settings["rcalc-show-pollution"].value --[[@as boolean]]
   local search_query = self.search_query
@@ -475,7 +475,8 @@ function gui_rates.update_display_data(self, set)
     if path == "item/rcalc-pollution-dummy/normal" and not show_pollution then
       goto continue
     end
-    local to_search = string.lower(dictionary[path] or rates.name)
+    local path_without_quality = string.match(path, "^(.*)/(.-)$")
+    local to_search = string.lower(dictionary[path_without_quality] or rates.name)
     if not string.find(to_search, search_query, nil, true) then
       goto continue
     end
