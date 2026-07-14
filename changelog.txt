@@ -1,9 +1,9 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.4.1
 Date: ????
-  Changes:
   Bugfixes:
-    - Fixed that probabilistic products (recycling, uranium processing, etc.) all showed identical rates instead of being weighted by their probability.
+    - Fixed that probabilistic products (recycling, uranium processing, etc.) all showed identical rates instead of being weighted by their probability. (#229, #233)
+    - Fixed that lab rates were incorrect. (#230, #231)
 ---------------------------------------------------------------------------------------------------
 Version: 3.4.0
 Date: 2026-06-23
