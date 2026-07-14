@@ -1,3 +1,5 @@
+local util = require("util")
+
 local flib_bounding_box = require("__flib__.bounding-box")
 local flib_math = require("__flib__.math")
 local flib_table = require("__flib__.table")
@@ -258,10 +260,7 @@ function calc_util.process_crafter(set, entity, invert, emissions_per_second)
     end
 
     -- stylua: ignore start
-    local extra_count_fraction_contribution = product.extra_count_fraction or 0
-    local max_amount = product.amount_max or product.amount
-    local min_amount = product.amount_min or product.amount
-    local expected_amount = (product.probability or 1) * 0.5 * (max_amount + min_amount) + extra_count_fraction_contribution
+    local expected_amount = util.product_amount(product)
     local productivity_base_complement = math.min(expected_amount, product.ignored_by_productivity or 0)
     local productivity_base = expected_amount - productivity_base_complement
     -- stylua: ignore end
@@ -580,16 +579,8 @@ function calc_util.process_mining_drill(set, entity, invert)
 
     -- Iterate each product
     for _, product in pairs(resource_data.products or {}) do
-      -- Get rate per second for this product on this drill
-      local product_per_second
-      if product.amount then
-        product_per_second = product.amount * resource_multiplier
-      else
-        product_per_second = product.amount_max - (product.amount_max - product.amount_min) / 2 * resource_multiplier
-      end
-
-      -- Account for probability
-      local adjusted_product_per_second = product_per_second * (product.probability or 1)
+      -- Get rate per second for this product on this drill, accounting for amount range and probability
+      local adjusted_product_per_second = util.product_amount(product) * resource_multiplier
 
       -- Add to outputs table
       calc_util.add_rate(
