@@ -104,6 +104,12 @@ styles.rcalc_rate_label = {
   width = 71,
 }
 
+styles.rcalc_density_label = {
+  type = "label_style",
+  parent = "rcalc_rate_label",
+  width = 96,
+}
+
 styles.rcalc_negative_subfooter_frame = {
   type = "frame_style",
   parent = "subfooter_frame",

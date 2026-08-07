@@ -6,9 +6,14 @@ local flib_table = require("__flib__.table")
 local gui_rates = require("scripts.gui-rates")
 local gui_util = require("scripts.gui-util")
 
+local on_toggle_density_column_button_click
+local on_toggle_limit_mode_button_click
+local frame_action_button
+
 --- @class GuiData
 --- @field elems table<string, LuaGuiElement>
 --- @field inserter_divisor EntityWithQualityID
+--- @field limit_final_products boolean
 --- @field manual_multiplier double
 --- @field materials_divisor string?
 --- @field pinned boolean
@@ -17,6 +22,7 @@ local gui_util = require("scripts.gui-util")
 --- @field search_query string
 --- @field selected_set_index integer
 --- @field selected_timescale Timescale
+--- @field show_density_column boolean
 --- @field sets CalculationSet[]
 --- @field transport_belt_divisor EntityWithQualityID
 --- @field display_data_lookup DisplayDataLookup
@@ -46,6 +52,106 @@ local function update_gui(self)
   end
 
   local elems = self.elems
+  if self.show_density_column == nil then
+    self.show_density_column = false
+  end
+  if self.limit_final_products == nil then
+    self.limit_final_products = false
+  end
+
+  local titlebar = elems.search_button and elems.search_button.parent
+  local subheader = elems.timescale_dropdown and elems.timescale_dropdown.parent
+  if subheader and subheader.valid then
+    if not elems.selection_area_label or not elems.selection_area_label.valid then
+      elems.selection_area_label = subheader.add({
+        type = "label",
+        name = "selection_area_label",
+        style = "caption_label",
+        caption = { "gui.rcalc-selection-area-caption", 0, 0, 0 },
+        tooltip = { "gui.rcalc-selection-area-description" },
+      })
+    end
+  end
+  if titlebar and titlebar.valid then
+    local toggle_density_column_button = elems.toggle_density_column_button
+    if toggle_density_column_button
+      and toggle_density_column_button.valid
+      and (toggle_density_column_button.parent ~= titlebar or toggle_density_column_button.type ~= "sprite-button")
+    then
+      toggle_density_column_button.destroy()
+      toggle_density_column_button = nil
+      elems.toggle_density_column_button = nil
+    end
+    local toggle_limit_mode_button = elems.toggle_limit_mode_button
+    if toggle_limit_mode_button
+      and toggle_limit_mode_button.valid
+      and (toggle_limit_mode_button.parent ~= titlebar or toggle_limit_mode_button.type ~= "sprite-button")
+    then
+      toggle_limit_mode_button.destroy()
+      toggle_limit_mode_button = nil
+      elems.toggle_limit_mode_button = nil
+    end
+
+    if not toggle_density_column_button or not toggle_density_column_button.valid then
+      flib_gui.add(
+        titlebar,
+        frame_action_button(
+          "toggle_density_column_button",
+          "rcalc_toggle_density_white",
+          { "gui.rcalc-toggle-density-column-description" },
+          on_toggle_density_column_button_click
+        )
+      )
+      toggle_density_column_button = titlebar.toggle_density_column_button
+      elems.toggle_density_column_button = toggle_density_column_button
+    end
+    if not toggle_limit_mode_button or not toggle_limit_mode_button.valid then
+      flib_gui.add(
+        titlebar,
+        frame_action_button(
+          "toggle_limit_mode_button",
+          "rcalc_toggle_limit_white",
+          { "gui.rcalc-toggle-limit-mode-description" },
+          on_toggle_limit_mode_button_click
+        )
+      )
+      toggle_limit_mode_button = titlebar.toggle_limit_mode_button
+      elems.toggle_limit_mode_button = toggle_limit_mode_button
+    end
+
+    local nav_forward_button = elems.nav_forward_button
+    if nav_forward_button
+      and nav_forward_button.valid
+      and nav_forward_button.parent == titlebar
+      and titlebar.swap_children
+      and nav_forward_button.get_index_in_parent
+    then
+      local function move_after_anchor(button, anchor)
+        if not button or not button.valid or button.parent ~= titlebar or not button.get_index_in_parent then
+          return
+        end
+        local button_index = button.get_index_in_parent()
+        local anchor_index = anchor.get_index_in_parent()
+        local target_index = anchor_index + 1
+        while button_index < target_index do
+          titlebar.swap_children(button_index, button_index + 1)
+          button_index = button_index + 1
+          anchor_index = anchor.get_index_in_parent()
+          target_index = anchor_index + 1
+        end
+        while button_index > target_index do
+          titlebar.swap_children(button_index, button_index - 1)
+          button_index = button_index - 1
+          anchor_index = anchor.get_index_in_parent()
+          target_index = anchor_index + 1
+        end
+      end
+      move_after_anchor(toggle_limit_mode_button, nav_forward_button)
+      if toggle_limit_mode_button.valid then
+        move_after_anchor(toggle_density_column_button, toggle_limit_mode_button)
+      end
+    end
+  end
 
   local nav_backward_button = elems.nav_backward_button
   local at_back = selected_set_index == 1
@@ -71,12 +177,24 @@ local function update_gui(self)
   end
   elems.timescale_dropdown.selected_index = flib_array.find(gui_util.ordered_timescales, timescale) --[[@as uint]]
   elems.multiplier_textfield.text = tostring(self.manual_multiplier)
+  local selection_area_tiles = set.selection_area_tiles or 0
+  local selection_area_width = set.selection_area_width or 0
+  local selection_area_height = set.selection_area_height or 0
+  elems.selection_area_label.caption = {
+    "gui.rcalc-selection-area-caption",
+    selection_area_tiles,
+    selection_area_width,
+    selection_area_height,
+  }
+  elems.toggle_density_column_button.toggled = self.show_density_column
+  elems.toggle_limit_mode_button.toggled = self.limit_final_products
 
   set.errors["inserter-rates-estimates"] = divisor_source == "inserter_divisor" and true or nil
 
   local show_checkboxes = self.player.mod_settings["rcalc-show-completion-checkboxes"].value --[[@as boolean]]
   local show_intermediate_breakdowns = self.player.mod_settings["rcalc-show-intermediate-breakdowns"].value --[[@as boolean]]
   self.elems.rates_scroll_pane.style.minimal_width = 500
+    + (self.show_density_column and 100 or 0)
     + (show_checkboxes and 44 or 0)
     + (show_intermediate_breakdowns and 50 or 0)
 
@@ -272,12 +390,32 @@ local function on_multiplier_nudge_clicked(e)
   update_gui(self)
 end
 
+--- @param e EventData.on_gui_click
+on_toggle_density_column_button_click = function(e)
+  local self = storage.gui[e.player_index]
+  if not self then
+    return
+  end
+  self.show_density_column = not self.show_density_column
+  update_gui(self)
+end
+
+--- @param e EventData.on_gui_click
+on_toggle_limit_mode_button_click = function(e)
+  local self = storage.gui[e.player_index]
+  if not self then
+    return
+  end
+  self.limit_final_products = not self.limit_final_products
+  update_gui(self)
+end
+
 --- @param name string
 --- @param sprite SpritePath
 --- @param tooltip LocalisedString
 --- @param handler flib.GuiElemHandler
 --- @return flib.GuiElemDef
-local function frame_action_button(name, sprite, tooltip, handler)
+frame_action_button = function(name, sprite, tooltip, handler)
   return {
     type = "sprite-button",
     name = name,
@@ -351,6 +489,18 @@ local function build_gui(player)
         { "gui.rcalc-next-set" },
         on_nav_forward_button_click
       ),
+      frame_action_button(
+        "toggle_limit_mode_button",
+        "rcalc_toggle_limit_white",
+        { "gui.rcalc-toggle-limit-mode-description" },
+        on_toggle_limit_mode_button_click
+      ),
+      frame_action_button(
+        "toggle_density_column_button",
+        "rcalc_toggle_density_white",
+        { "gui.rcalc-toggle-density-column-description" },
+        on_toggle_density_column_button_click
+      ),
       frame_action_button("pin_button", "flib_pin_white", { "gui.flib-keep-open" }, on_pin_button_click),
       frame_action_button("close_button", "utility/close", { "gui.close-instruction" }, on_close_button_click),
     },
@@ -417,6 +567,13 @@ local function build_gui(player)
             },
           },
         },
+        {
+          type = "label",
+          name = "selection_area_label",
+          style = "caption_label",
+          caption = { "gui.rcalc-selection-area-caption", 0, 0, 0 },
+          tooltip = { "gui.rcalc-selection-area-description" },
+        },
       },
       {
         type = "scroll-pane",
@@ -449,6 +606,8 @@ local function build_gui(player)
     search_query = "",
     selected_set_index = 0,
     selected_timescale = default_timescale,
+    show_density_column = false,
+    limit_final_products = false,
     sets = {},
     transport_belt_divisor = gui_util.get_first_prototype(storage.elem_filters.transport_belt_divisor),
   }
@@ -561,6 +720,8 @@ flib_gui.add_handlers({
   on_pin_button_click = on_pin_button_click,
   on_search_button_click = on_search_button_click,
   on_search_text_changed = on_search_text_changed,
+  on_toggle_density_column_button_click = on_toggle_density_column_button_click,
+  on_toggle_limit_mode_button_click = on_toggle_limit_mode_button_click,
   on_timescale_dropdown_changed = on_timescale_dropdown_changed,
   on_titlebar_click = on_titlebar_click,
   on_window_closed = on_window_closed,

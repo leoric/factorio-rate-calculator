@@ -167,6 +167,7 @@ end
 gui_util.timescale_data = {
   ["per-second"] = { divisor_source = "materials_divisor", multiplier = 1 },
   ["per-minute"] = { divisor_source = "materials_divisor", multiplier = 60 },
+  ["per-10-minutes"] = { divisor_source = "materials_divisor", multiplier = 60 * 10 },
   ["per-hour"] = { divisor_source = "materials_divisor", multiplier = 60 * 60 },
   ["transport-belts"] = { divisor_required = true, divisor_source = "transport_belt_divisor", type_filter = "item" },
   ["inserters"] = { divisor_required = true, divisor_source = "inserter_divisor", type_filter = "item" },
@@ -176,6 +177,7 @@ gui_util.timescale_data = {
 gui_util.ordered_timescales = {
   "per-second",
   "per-minute",
+  "per-10-minutes",
   "per-hour",
   "transport-belts",
   "inserters",

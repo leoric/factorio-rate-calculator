@@ -25,14 +25,19 @@ local type_filters = {
   "locomotive",
   "mining-drill",
   "offshore-pump",
+  "pipe",
+  "pipe-to-ground",
   "programmable-speaker",
   "pump",
   "radar",
   "reactor",
   "roboport",
   "rocket-silo",
+  "splitter",
   "solar-panel",
+  "transport-belt",
   "turret",
+  "underground-belt",
 }
 
 data:extend({

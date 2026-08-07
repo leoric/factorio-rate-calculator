@@ -15,4 +15,18 @@ data:extend({
     mipmap_count = 2,
     flags = { "gui-icon" },
   },
+  {
+    type = "sprite",
+    name = "rcalc_toggle_density_white",
+    filename = "__RateCalculator__/graphics/toggle-density-white.png",
+    size = 32,
+    flags = { "gui-icon" },
+  },
+  {
+    type = "sprite",
+    name = "rcalc_toggle_limit_white",
+    filename = "__RateCalculator__/graphics/toggle-limit-white.png",
+    size = 32,
+    flags = { "gui-icon" },
+  },
 })
