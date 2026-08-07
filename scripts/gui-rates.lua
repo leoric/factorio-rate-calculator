@@ -4,6 +4,7 @@ local flib_gui = require("__flib__.gui")
 local flib_math = require("__flib__.math")
 local flib_table = require("__flib__.table")
 
+local calc_cache = require("scripts.calc-cache")
 local gui_util = require("scripts.gui-util")
 
 --- @alias DisplayCategory
@@ -15,6 +16,7 @@ local gui_util = require("scripts.gui-util")
 
 --- @class RatesDisplayData: Rates
 --- @field category DisplayCategory
+--- @field density_per_tile double?
 --- @field path SpritePath
 --- @field sorting_rate double
 --- @field completed boolean
@@ -28,6 +30,12 @@ local colors = {
   red = "255,150,150",
   white = "255,255,255",
 }
+
+local function is_dummy_path(path)
+  return path == "item/rcalc-power-dummy/normal"
+    or path == "item/rcalc-heat-dummy/normal"
+    or path == "item/rcalc-pollution-dummy/normal"
+end
 
 --- @param amount number
 --- @param prefer_si boolean
@@ -62,7 +70,7 @@ local function build_machine_icons(counts, include_numbers)
   for name, count in pairs(counts) do
     output = output .. "[entity=" .. name .. "] "
     if include_numbers then
-      output = output .. count .. "  "
+      output = output .. format_number(count, false, false) .. "  "
     end
   end
   return output
@@ -268,7 +276,8 @@ flib_gui.add_handlers({
 --- @param show_machines boolean
 --- @param show_checkboxes boolean
 --- @param show_breakdown boolean
-local function build_rates_table(parent, category, rates, show_machines, show_checkboxes, show_breakdown)
+--- @param show_density_column boolean
+local function build_rates_table(parent, category, rates, show_machines, show_checkboxes, show_breakdown, show_density_column)
   --- @type flib.GuiElemDef
   local rates_table = { type = "table", style = "slot_table", column_count = 1 }
 
@@ -374,6 +383,26 @@ local function build_rates_table(parent, category, rates, show_machines, show_ch
       }
     end
 
+    if category == "products" and show_density_column then
+      --- @type LocalisedString
+      local density_caption = ""
+      local density_per_tile = data.density_per_tile
+      if density_per_tile then
+        density_caption = {
+          "",
+          format_number(density_per_tile, data.is_watts, false),
+          data.is_watts and { "si-unit-symbol-watt" } or "",
+          { "gui.rcalc-per-tile-suffix" },
+        }
+      end
+      flow[#flow + 1] = {
+        type = "label",
+        style = "rcalc_density_label",
+        caption = density_caption,
+        ignored_by_interaction = true,
+      }
+    end
+
     flow[#flow + 1] = {
       type = "label",
       style = "rcalc_rate_label",
@@ -408,6 +437,7 @@ function gui_rates.update_display_data(self, set)
   local dictionary = flib_dictionary.get(self.player.index, "search") or {}
   local show_power_input = self.player.mod_settings["rcalc-show-power-consumption"].value --[[@as boolean]]
   local show_pollution = self.player.mod_settings["rcalc-show-pollution"].value --[[@as boolean]]
+  local selection_area_tiles = set.selection_area_tiles or 0
   local search_query = self.search_query
 
   --- @param rate Rate
@@ -434,7 +464,8 @@ function gui_rates.update_display_data(self, set)
   --- @type DisplayDataLookup
   local display_data_lookup = {}
 
-  for path, rates in pairs(set.rates) do
+  local rates_table = calc_cache.get_rates_table(set, self.limit_final_products, false)
+  for path, rates in pairs(rates_table) do
     local is_watts = path == "item/rcalc-power-dummy/normal" or path == "item/rcalc-heat-dummy/normal"
     local output = scale_rate(rates.output, is_watts)
     local input = scale_rate(rates.input, is_watts)
@@ -481,6 +512,12 @@ function gui_rates.update_display_data(self, set)
     end
 
     --- @type RatesDisplayData
+    local density_per_tile
+    if category == "products" and selection_area_tiles > 0 and not is_dummy_path(path) then
+      density_per_tile = output.rate / selection_area_tiles
+    end
+
+    --- @type RatesDisplayData
     local data = {
       type = rates.type,
       name = rates.name,
@@ -490,6 +527,7 @@ function gui_rates.update_display_data(self, set)
       input = input,
       path = path,
       category = category,
+      density_per_tile = density_per_tile,
       sorting_rate = sorting_rate,
       completed = set.completed[path] or false,
       is_watts = is_watts,
@@ -517,6 +555,7 @@ end
 function gui_rates.update_gui(self, category_display_data)
   local show_checkboxes = self.player.mod_settings["rcalc-show-completion-checkboxes"].value --[[@as boolean]]
   local show_intermediate_breakdowns = self.player.mod_settings["rcalc-show-intermediate-breakdowns"].value --[[@as boolean]]
+  local show_density_column = self.show_density_column ~= false
 
   local has_ingredients = #category_display_data.ingredients > 0
   local has_intermediates = #category_display_data.intermediates > 0
@@ -532,7 +571,8 @@ function gui_rates.update_gui(self, category_display_data)
       category_display_data.ingredients,
       not has_intermediates and not has_products,
       show_checkboxes,
-      show_intermediate_breakdowns
+      show_intermediate_breakdowns,
+      false
     )
     if has_intermediates or has_products then
       rates_flow.add({ type = "line", direction = "vertical" })
@@ -549,7 +589,8 @@ function gui_rates.update_gui(self, category_display_data)
       category_display_data.products,
       true,
       show_checkboxes,
-      show_intermediate_breakdowns
+      show_intermediate_breakdowns,
+      show_density_column
     )
     if has_intermediates then
       rates_flow.add({ type = "line", direction = "horizontal" })
@@ -563,7 +604,8 @@ function gui_rates.update_gui(self, category_display_data)
       category_display_data.intermediates,
       true,
       show_checkboxes,
-      show_intermediate_breakdowns
+      show_intermediate_breakdowns,
+      false
     )
   end
 

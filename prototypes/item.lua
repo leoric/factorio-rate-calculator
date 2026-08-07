@@ -25,14 +25,19 @@ local type_filters = {
   "locomotive",
   "mining-drill",
   "offshore-pump",
+  "pipe",
+  "pipe-to-ground",
   "programmable-speaker",
   "pump",
   "radar",
   "reactor",
   "roboport",
   "rocket-silo",
+  "splitter",
   "solar-panel",
+  "transport-belt",
   "turret",
+  "underground-belt",
 }
 
 data:extend({
@@ -42,7 +47,7 @@ data:extend({
     order = "d[tools]-r[rate-calculator]",
     icons = {
       { icon = data_util.black_image, icon_size = 1, scale = 64 },
-      { icon = "__RateCalculator__/graphics/shortcut-x32-white.png", icon_size = 32, mipmap_count = 2 },
+      { icon = "__RateCalculatorPlus__/graphics/shortcut-x32-white.png", icon_size = 32, mipmap_count = 2 },
     },
     select = {
       border_color = { r = 1, g = 1 },
@@ -75,7 +80,7 @@ data:extend({
   {
     type = "item",
     name = "rcalc-power-dummy",
-    icon = "__RateCalculator__/graphics/power.png",
+    icon = "__RateCalculatorPlus__/graphics/power.png",
     icon_size = 64,
     stack_size = 1,
     hidden = true,
@@ -91,7 +96,7 @@ data:extend({
   {
     type = "item",
     name = "rcalc-pollution-dummy",
-    icon = "__RateCalculator__/graphics/pollution.png",
+    icon = "__RateCalculatorPlus__/graphics/pollution.png",
     icon_size = 64,
     icon_mipmaps = 2,
     stack_size = 1,

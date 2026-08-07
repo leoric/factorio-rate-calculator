@@ -29,7 +29,7 @@ data:extend({
     name = "rcalc-default-timescale",
     setting_type = "runtime-per-user",
     default_value = "per-second",
-    allowed_values = { "per-second", "per-minute", "per-hour", "transport-belts", "inserters" },
+    allowed_values = { "per-second", "per-minute", "per-10-minutes", "per-hour", "transport-belts", "inserters" },
   },
   {
     type = "bool-setting",

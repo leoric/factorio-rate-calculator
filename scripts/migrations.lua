@@ -4,7 +4,7 @@ local by_version = {
   ["3.0.0"] = function()
     for _, player in pairs(game.players) do
       for _, child in pairs(player.gui.screen.children) do
-        if child.get_mod() == "RateCalculator" then
+        if child.get_mod() == "RateCalculator" or child.get_mod() == "RateCalculatorPlus" then
           child.destroy()
         end
       end
