@@ -1,10 +1,20 @@
-[![shield](https://img.shields.io/badge/Ko--fi-Donate%20-hotpink?logo=kofi&logoColor=white)](https://ko-fi.com/raiguard)
-[![shield](https://img.shields.io/badge/Crowdin-Translate-brightgreen)](https://crowdin.com/project/raiguards-factorio-mods)
+Fork of Rate Calculator focused on practical factory planning metrics
+
 [![shield](https://img.shields.io/badge/dynamic/json?color=orange&label=Factorio&query=downloads_count&suffix=%20downloads&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2FRateCalculator)](https://mods.factorio.com/mod/RateCalculator)
 
 # Rate Calculator
 
 Calculate maximum production and consumption rates for the selected machines.
+
+## What's different
+
+ - Optional output limiting mode for final products based on internally produced ingredients.
+ - Selection area metric based on bounding rectangle (width x height).
+ - Final product density metric (production per tile).
+ - Separate final-products density column in the GUI.
+ - Header buttons to toggle:
+   - Final-products density column visibility.
+   - Output limiting mode.
 
 ## Installation
 

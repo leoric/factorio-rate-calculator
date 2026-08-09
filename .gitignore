@@ -1,5 +1,7 @@
+.DS_Store
 .kakrc
 pesticide.toml
 .vscode
 .luarc.json
 pesticide.json
+*zip
